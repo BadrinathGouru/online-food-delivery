@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | FoodFlow</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body>
+    <main class="auth-container">
+        <section class="auth-card">
+            <div class="auth-card-body">
+                <span class="brand-icon">🍽️</span>
+                <a class="brand" href="{{ url_for('index') }}">Food<span>Flow</span></a>
+
+                <h1>Admin Login</h1>
+                <p class="subtitle">Sign in to manage your food delivery operations.</p>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="message {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form action="{{ url_for('admin_login') }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div>
+                        <label for="username">Username</label>
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            autocomplete="username"
+                            placeholder="Enter admin username"
+                            required
+                        >
+                    </div>
+
+                    <div>
+                        <label for="password">Password</label>
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            autocomplete="current-password"
+                            placeholder="Enter admin password"
+                            required
+                        >
+                    </div>
+
+                    <button type="submit">Sign In to Admin Panel</button>
+                </form>
+
+                <p class="switch-page" style="margin-top: 20px;">
+                    Looking for customer ordering?
+                    <a href="{{ url_for('common_login') }}">Go to main login</a>
+                </p>
+
+                <a class="back-link" href="{{ url_for('common_login') }}">← Back to Login</a>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

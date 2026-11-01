@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Delivery | Admin Dashboard</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="brand">
+                <span class="brand-icon">🍽️</span>
+                <div>
+                    <h2>FoodFlow</h2>
+                    <small>Admin Panel</small>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button class="nav-link active" data-section="overview">📊 Overview</button>
+                <button class="nav-link" data-section="orders">🧾 Orders</button>
+                <button class="nav-link" data-section="menu">🍔 Menu Management</button>
+                <button class="nav-link" data-section="staff">🛵 Delivery Staff</button>
+                <button class="nav-link" data-section="deliveries">📍 Delivery Tracking</button>
+            </nav>
+
+            <a href="{{ url_for('customer_home') }}" class="back-link">← Customer Website</a>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <h1 id="page-title">Dashboard Overview</h1>
+                    <p>Manage your food delivery operations.</p>
+                </div>
+                <div class="topbar-actions">
+                    <button class="btn btn-secondary" id="refresh-all">↻ Refresh</button>
+                    <form action="{{ url_for('admin_logout') }}" method="POST" style="display:inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-secondary">Logout</button>
+                    </form>
+                </div>
+            </header>
+
+            <div id="global-message" class="message hidden" role="status"></div>
+
+            <!-- OVERVIEW -->
+            <section class="page-section active" id="section-overview">
+                <div class="stats-grid">
+                    <article class="stat-card">
+                        <span class="stat-icon">🧾</span>
+                        <p>Total Orders</p>
+                        <h2 id="stat-total-orders">0</h2>
+                    </article>
+                    <article class="stat-card">
+                        <span class="stat-icon">⏳</span>
+                        <p>Pending Orders</p>
+                        <h2 id="stat-pending-orders">0</h2>
+                    </article>
+                    <article class="stat-card">
+                        <span class="stat-icon">👨‍🍳</span>
+                        <p>Preparing</p>
+                        <h2 id="stat-preparing-orders">0</h2>
+                    </article>
+                    <article class="stat-card">
+                        <span class="stat-icon">✅</span>
+                        <p>Delivered</p>
+                        <h2 id="stat-delivered-orders">0</h2>
+                    </article>
+                    <article class="stat-card sales-card">
+                        <span class="stat-icon">₹</span>
+                        <p>Total Sales</p>
+                        <h2 id="stat-total-sales">₹0.00</h2>
+                    </article>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Recent Orders</h2>
+                            <p>Latest customer orders and their current status.</p>
+                        </div>
+                        <button class="btn btn-primary" data-go="orders">View All Orders</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Order</th>
+                                    <th>Customer</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-orders-body">
+                                <tr><td colspan="5" class="empty-state">Loading orders...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ORDERS -->
+            <section class="page-section" id="section-orders">
+                <div class="panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Order Management</h2>
+                            <p>Review customer orders and update order status.</p>
+                        </div>
+                        <select id="order-filter" class="field-control">
+                            <option value="All">All Orders</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Preparing">Preparing</option>
+                            <option value="Delivered">Delivered</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Order</th>
+                                    <th>Customer Details</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Update</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-body">
+                                <tr><td colspan="7" class="empty-state">Loading orders...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MENU MANAGEMENT -->
+            <section class="page-section" id="section-menu">
+                <div class="menu-summary">
+                    <div>
+                        <h2>Menu Management</h2>
+                        <p>Add food items, update prices, and control what customers can order.</p>
+                    </div>
+                    <div class="menu-summary-badge">
+                        <span id="menu-item-count">0</span>
+                        <small>Menu Items</small>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2 id="menu-form-title">Add a Food Item</h2>
+                            <p>Enter the food details below.</p>
+                        </div>
+                    </div>
+
+                    <form id="menu-form" class="form-grid">
+                        <input type="hidden" id="menu-item-id">
+
+                        <div class="form-field">
+                            <label for="menu-item-name">Food Name *</label>
+                            <input id="menu-item-name" type="text" maxlength="150"
+                                   placeholder="e.g. Chicken Biryani" required>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="menu-category">Category</label>
+                            <input id="menu-category" type="text" maxlength="100"
+                                   placeholder="e.g. Biryani">
+                        </div>
+
+                        <div class="form-field">
+                            <label for="menu-price">Price (₹) *</label>
+                            <input id="menu-price" type="number" min="0.01" max="100000"
+                                   step="0.01" placeholder="220.00" required>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="menu-restaurant">Restaurant *</label>
+                            <select id="menu-restaurant" required>
+                                <option value="">Loading restaurants...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-field checkbox-field">
+                            <label>
+                                <input id="menu-available" type="checkbox" checked>
+                                Available for customers
+                            </label>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="menu-submit-btn">
+                                + Add Food Item
+                            </button>
+                            <button type="button" class="btn btn-secondary hidden" id="menu-reset-btn">
+                                Cancel Edit
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Food Items</h2>
+                            <p>Items marked unavailable are hidden from the customer menu.</p>
+                        </div>
+                        <button class="btn btn-secondary" id="refresh-menu">↻ Refresh Menu</button>
+                    </div>
+
+                    <div class="menu-toolbar">
+                        <input id="menu-search" class="field-control"
+                               type="search" placeholder="Search food or restaurant...">
+                        <select id="menu-availability-filter" class="field-control">
+                            <option value="All">All Items</option>
+                            <option value="Available">Available</option>
+                            <option value="Unavailable">Unavailable</option>
+                        </select>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Food Item</th>
+                                    <th>Restaurant</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Availability</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="menu-body">
+                                <tr><td colspan="6" class="empty-state">Loading menu...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- DELIVERY STAFF -->
+            <section class="page-section" id="section-staff">
+                <div class="panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Add Delivery Staff</h2>
+                            <p>Register a delivery person to assign orders.</p>
+                        </div>
+                    </div>
+
+                    <form id="staff-form" class="form-grid">
+                        <div class="form-field">
+                            <label for="staff-name">Full Name *</label>
+                            <input id="staff-name" type="text" maxlength="100"
+                                   placeholder="Delivery person's name" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="staff-phone">Phone Number *</label>
+                            <input id="staff-phone" type="tel" maxlength="15"
+                                   placeholder="Phone number" required>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">+ Add Staff</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Delivery Personnel</h2>
+                            <p>Current availability of delivery staff.</p>
+                        </div>
+                    </div>
+                    <div id="staff-list" class="staff-grid">
+                        <p class="empty-state">Loading staff...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- DELIVERY TRACKING -->
+            <section class="page-section" id="section-deliveries">
+                <div class="panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Assign a Delivery</h2>
+                            <p>Choose an eligible order, available staff member, and destination.</p>
+                        </div>
+                    </div>
+
+                    <form id="assign-form" class="form-grid">
+                        <div class="form-field">
+                            <label for="assign-order">Order *</label>
+                            <select id="assign-order" required>
+                                <option value="">Loading orders...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="assign-staff">Available Staff *</label>
+                            <select id="assign-staff" required>
+                                <option value="">Loading staff...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="delivery-address">Delivery Address</label>
+                            <input id="delivery-address" type="text" maxlength="255"
+                                   placeholder="Street, area, city">
+                        </div>
+
+                        <div class="form-field">
+                            <label for="building-details">Building / Flat Details</label>
+                            <input id="building-details" type="text" maxlength="150"
+                                   placeholder="Flat number, floor, landmark">
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Assign Delivery</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Delivery Tracking</h2>
+                            <p>Monitor assignments and update delivery progress.</p>
+                        </div>
+                        <button class="btn btn-secondary" id="refresh-deliveries">↻ Refresh</button>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Delivery</th>
+                                    <th>Customer</th>
+                                    <th>Destination</th>
+                                    <th>Delivery Staff</th>
+                                    <th>Status</th>
+                                    <th>Update</th>
+                                </tr>
+                            </thead>
+                            <tbody id="deliveries-body">
+                                <tr><td colspan="6" class="empty-state">Loading deliveries...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="footer">
+                FoodFlow Admin · Online Food Delivery Management System
+            </footer>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+</body>
+</html>

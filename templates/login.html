@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | FoodFlow</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body>
+    <main class="auth-container">
+        <section class="auth-card">
+            <div class="auth-card-body">
+                <a class="brand" href="{{ url_for('index') }}">Food<span>Flow</span></a>
+
+                <h1 id="login-title">Welcome to FoodFlow</h1>
+                <p class="subtitle" id="login-subtitle">Choose your account type to sign in.</p>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="message {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Account Type Switcher -->
+                <div class="account-type-tabs" role="tablist">
+                    <button type="button" class="tab-btn active" id="tab-customer" role="tab" aria-selected="true" onclick="setAccountType('customer')">
+                        👤 Customer
+                    </button>
+                    <button type="button" class="tab-btn" id="tab-admin" role="tab" aria-selected="false" onclick="setAccountType('admin')">
+                        🛠️ Administrator
+                    </button>
+                </div>
+
+                <form id="common-login-form" action="{{ url_for('common_login') }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="account_type" id="account_type" value="customer">
+
+                    <!-- Customer Email Field -->
+                    <div id="customer-email-group">
+                        <label for="email">Email address</label>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            autocomplete="email"
+                            placeholder="you@example.com"
+                        >
+                    </div>
+
+                    <!-- Admin Username Field -->
+                    <div id="admin-username-group" style="display: none;">
+                        <label for="username">Admin Username</label>
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            autocomplete="username"
+                            placeholder="Enter admin username"
+                        >
+                    </div>
+
+                    <!-- Password Field -->
+                    <div>
+                        <label for="password">Password</label>
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            autocomplete="current-password"
+                            placeholder="Enter your password"
+                            required
+                        >
+                    </div>
+
+                    <button type="submit" id="submit-btn">Log In as Customer</button>
+                </form>
+
+                <p class="switch-page" id="signup-link-container">
+                    Don't have an account?
+                    <a href="{{ url_for('signup') }}">Create a customer account</a>
+                </p>
+
+                <p class="switch-page" id="admin-note" style="display: none; font-size: 0.82rem; color: #9ca3af; margin-top: 18px;">
+                    Protected portal for authorized restaurant administrators only.
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function setAccountType(type) {
+            const customerTab = document.getElementById("tab-customer");
+            const adminTab = document.getElementById("tab-admin");
+            const accountTypeInput = document.getElementById("account_type");
+            const customerEmailGroup = document.getElementById("customer-email-group");
+            const adminUsernameGroup = document.getElementById("admin-username-group");
+            const emailInput = document.getElementById("email");
+            const usernameInput = document.getElementById("username");
+            const submitBtn = document.getElementById("submit-btn");
+            const loginTitle = document.getElementById("login-title");
+            const loginSubtitle = document.getElementById("login-subtitle");
+            const signupLink = document.getElementById("signup-link-container");
+            const adminNote = document.getElementById("admin-note");
+
+            accountTypeInput.value = type;
+
+            if (type === "admin") {
+                customerTab.classList.remove("active");
+                customerTab.setAttribute("aria-selected", "false");
+                adminTab.classList.add("active");
+                adminTab.setAttribute("aria-selected", "true");
+
+                customerEmailGroup.style.display = "none";
+                emailInput.required = false;
+                adminUsernameGroup.style.display = "block";
+                usernameInput.required = true;
+                usernameInput.focus();
+
+                submitBtn.textContent = "Log In as Administrator";
+                loginTitle.textContent = "Admin Portal";
+                loginSubtitle.textContent = "Sign in to manage food orders and operations.";
+                signupLink.style.display = "none";
+                adminNote.style.display = "block";
+            } else {
+                adminTab.classList.remove("active");
+                adminTab.setAttribute("aria-selected", "false");
+                customerTab.classList.add("active");
+                customerTab.setAttribute("aria-selected", "true");
+
+                adminUsernameGroup.style.display = "none";
+                usernameInput.required = false;
+                customerEmailGroup.style.display = "block";
+                emailInput.required = true;
+                emailInput.focus();
+
+                submitBtn.textContent = "Log In as Customer";
+                loginTitle.textContent = "Welcome to FoodFlow";
+                loginSubtitle.textContent = "Log in to browse the menu and order food.";
+                signupLink.style.display = "block";
+                adminNote.style.display = "none";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            setAccountType("customer");
+        });
+    </script>
+</body>
+</html>

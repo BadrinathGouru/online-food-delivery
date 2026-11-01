@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodFlow - Online Food Delivery</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header class="header">
+        <div class="header-inner">
+            <div class="header-brand">
+                <h1>🍽️ FoodFlow</h1>
+                <p>Delicious food, delivered to your doorstep!</p>
+            </div>
+
+            <nav class="header-nav">
+                <a class="header-link" href="#food-menu">Menu</a>
+                <a class="header-link" href="#cart-items">🛒 Cart</a>
+                <a class="header-link" href="#order-history">📋 Order History</a>
+
+                {% if session.get('customer_id') %}
+                    <span class="welcome-user">
+                        Welcome, {{ session.get('customer_name') }}!
+                    </span>
+
+                    <form class="logout-form" action="{{ url_for('logout') }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="header-link auth-link" type="submit">
+                            Logout
+                        </button>
+                    </form>
+                {% else %}
+                    <a class="header-link auth-link" href="{{ url_for('common_login') }}">Login</a>
+                    <a class="header-link auth-link" href="{{ url_for('signup') }}">Sign Up</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- MENU SECTION -->
+        <section class="menu-section" id="food-menu-section">
+            <h2 class="section-title">Our Food Menu</h2>
+            <p class="subtitle">Browse and add your favourite dishes to the cart.</p>
+
+            <!-- Search & Filter Controls -->
+            <div class="menu-controls" style="margin-top: 18px;">
+                <input
+                    type="search"
+                    id="menu-search"
+                    placeholder="🔍 Search food, restaurant..."
+                    aria-label="Search menu items"
+                >
+                <select id="category-filter" aria-label="Filter by category">
+                    <option value="">All Categories</option>
+                </select>
+            </div>
+
+            <div id="food-menu" class="food-grid">
+                <p>Loading food menu...</p>
+            </div>
+        </section>
+
+        <!-- CART SECTION -->
+        <section class="cart-section">
+            <h2>🛒 Your Shopping Cart</h2>
+            <div id="cart-items">
+                <p>Your cart is empty.</p>
+            </div>
+
+            <div class="cart-summary">
+                <h3>Total: ₹<span id="cart-total">0.00</span></h3>
+                <button id="clear-cart" class="secondary-button" type="button">
+                    Clear Cart
+                </button>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- ORDER FORM -->
+            <div class="customer-section">
+                <h2>Customer & Delivery Details</h2>
+                <p class="subtitle">Confirm your information and delivery address to complete your order.</p>
+
+                <form id="order-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="form-group">
+                        <label for="customer-name">Full Name *</label>
+                        <input type="text" id="customer-name" name="name"
+                               maxlength="100" required
+                               value="{{ session.get('customer_name', '') }}"
+                               placeholder="Enter your full name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="customer-email">Email Address *</label>
+                        <input type="email" id="customer-email" name="email"
+                               maxlength="150" required readonly
+                               value="{{ session.get('customer_email', '') }}"
+                               placeholder="Enter your email address">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="customer-phone">Phone Number</label>
+                        <input type="tel" id="customer-phone" name="phone"
+                               maxlength="15"
+                               placeholder="Enter your contact phone number">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="delivery-address">Delivery Address *</label>
+                        <input type="text" id="delivery-address" name="delivery_address"
+                               maxlength="255" required
+                               placeholder="Street, area, city">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="building-details">Flat / Building Details</label>
+                        <input type="text" id="building-details" name="building_details"
+                               maxlength="150"
+                               placeholder="Flat no., floor, landmark">
+                    </div>
+
+                    <button id="place-order" class="primary-button" type="submit">
+                        Place Order
+                    </button>
+                    <p id="order-message" role="status" aria-live="polite"></p>
+                </form>
+            </div>
+        </section>
+
+        <!-- ORDER HISTORY -->
+        <section id="order-history" class="history-section">
+            <div class="history-heading">
+                <div>
+                    <h2 class="section-title">📋 Your Order History</h2>
+                    <p class="subtitle">Review your past and active orders.</p>
+                </div>
+                <button id="refresh-orders" class="secondary-button" type="button">
+                    ↻ Refresh Orders
+                </button>
+            </div>
+
+            <div id="order-history-list" aria-live="polite">
+                <p>Loading order history...</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>🍽️ FoodFlow &mdash; Online Food Delivery Management System &mdash; DBMS Project</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
